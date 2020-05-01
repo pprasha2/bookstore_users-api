@@ -13,12 +13,20 @@ import (
 
 //dto - data transfer object
 
-//GetUsers fetch the user based on user_id
-func GetUsers(c *gin.Context) {
-	userId, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
+func getUserID(userIDParam string) (int64, *errors.RestErr) {
+	userId, userErr := strconv.ParseInt(userIDParam, 10, 64)
 	if userErr != nil {
-		err := errors.NewBadRequestError("invalid userId, userId should be a number")
-		c.JSON(http.StatusBadRequest, err)
+		return 0, errors.NewBadRequestError("invalid userId, userId should be a number")
+
+	}
+	return userId, nil
+}
+
+//GetUsers fetch the user based on user_id
+func Get(c *gin.Context) {
+	userId, idErr := getUserID(c.Param("user_id"))
+	if idErr != nil {
+		c.JSON(idErr.Status, idErr)
 		return
 	}
 
@@ -36,7 +44,7 @@ func GetUsers(c *gin.Context) {
 
 //CreateUser create a new user
 //It fetches the parameters to process the request and send it to correspondig service
-func CreateUser(c *gin.Context) {
+func Create(c *gin.Context) {
 	var user users.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		//TODO return Bad request
@@ -61,6 +69,52 @@ func CreateUser(c *gin.Context) {
 }
 
 //SearchUser searches a user
-func SearchUser(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "Implement me!")
+func Search(c *gin.Context) {
+	status := c.Query("status")
+	users, err := services.Search(status)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, users)
+}
+
+func Update(c *gin.Context) {
+	userId, idErr := getUserID(c.Param("user_id"))
+	if idErr != nil {
+		c.JSON(idErr.Status, idErr)
+		return
+	}
+	var user users.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		//TODO return Bad request
+		restErr := errors.NewBadRequestError("Invalid Json Body")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+	user.Id = userId
+	isPartial := c.Request.Method == http.MethodPatch
+	result, err := services.UpdateUser(isPartial, user)
+	if err != nil {
+		//TODO Handle User creation error
+
+		c.JSON(err.Status, err)
+		return
+
+	}
+	c.JSON(http.StatusOK, result)
+
+}
+
+func Delete(c *gin.Context) {
+	userId, idErr := getUserID(c.Param("user_id"))
+	if idErr != nil {
+		c.JSON(idErr.Status, idErr)
+		return
+	}
+	if err := services.DeleteUser(userId); err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
 }

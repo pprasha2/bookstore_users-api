@@ -26,6 +26,7 @@ func ParseError(err error) *errors.RestErr {
 	}
 	switch sqlError.Number {
 	case 1062:
+		fmt.Println(sqlError)
 		return errors.NewBadRequestError("invalid data")
 
 	}
