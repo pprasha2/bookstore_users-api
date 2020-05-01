@@ -11,6 +11,8 @@ import (
 	"github.com/pprasha2/bookstore_users-api/utils/errors"
 )
 
+//dto - data transfer object
+
 //GetUsers fetch the user based on user_id
 func GetUsers(c *gin.Context) {
 	userId, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
