@@ -22,6 +22,8 @@ type User struct {
 	Password    string `json:"password"`
 }
 
+type Users []User
+
 //Validate validates the checks before processing further
 func (user *User) Validate() *errors.RestErr {
 	fmt.Println("In validating Method")

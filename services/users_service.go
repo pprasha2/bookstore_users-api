@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pprasha2/bookstore_users-api/domain/users"
+	"github.com/pprasha2/bookstore_users-api/utils/crypto_utils"
 	"github.com/pprasha2/bookstore_users-api/utils/date_utils"
 	"github.com/pprasha2/bookstore_users-api/utils/errors"
 )
@@ -27,6 +28,7 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	}
 	user.DateCreated = date_utils.GetNowDBFormat()
 	user.Status = users.StatusActive
+	user.Password = crypto_utils.GetMd5(user.Password)
 	if err := user.Save(); err != nil {
 		return nil, err
 	}
@@ -70,7 +72,7 @@ func DeleteUser(userId int64) *errors.RestErr {
 	return user.Delete()
 }
 
-func Search(status string) ([]users.User, *errors.RestErr) {
+func Search(status string) (users.Users, *errors.RestErr) {
 	dao := users.User{}
 	return dao.FindByStatus(status)
 }
